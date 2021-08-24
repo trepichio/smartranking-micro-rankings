@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { MatchInterface } from './interfaces/match.interface';
+import { IMatch } from './interfaces/match.interface';
 import { Model } from 'mongoose';
 import { Ranking } from './interfaces/ranking.schema';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ClientProxySmartRanking } from 'src/proxyrmq/client-proxy.provider';
-import { CategoryInterface } from './interfaces/category.interface';
+import { ICategory } from './interfaces/category.interface';
 import { EventName } from 'src/rankings/event-name.enum';
 
 @Injectable()
@@ -20,12 +20,12 @@ export class RankingsService {
   private readonly clientAdminBackend: ClientProxy =
     this.clientSmartRanking.getClientProxyInstance('admin');
 
-  async processMatch(matchId: string, match: MatchInterface): Promise<void> {
+  async processMatch(matchId: string, match: IMatch): Promise<void> {
     this.logger.log(`Processing match ${matchId}`);
     this.logger.log(`Match: ${JSON.stringify(match, null, 2)}`);
 
     try {
-      const category: CategoryInterface = await this.clientAdminBackend
+      const category: ICategory = await this.clientAdminBackend
         .send('get-categories', match.category)
         .toPromise();
 
