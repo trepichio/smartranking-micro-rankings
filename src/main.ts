@@ -36,6 +36,13 @@ async function bootstrap() {
     },
   );
 
+  Date.prototype.toJSON = function (): any {
+    return this.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      formatMatcher: 'best fit',
+    });
+  };
+
   app.listen();
 }
 bootstrap();
