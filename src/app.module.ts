@@ -3,6 +3,7 @@ import { RankingsModule } from './rankings/rankings.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config/database';
+import { ProxyrmqModule } from './proxyrmq/proxyrmq.module';
 
 const configService = new ConfigService();
 
@@ -11,6 +12,7 @@ const configService = new ConfigService();
     RankingsModule,
     ConfigModule.forRoot({ isGlobal: true, expandVariables: true }),
     MongooseModule.forRoot(configService.get<string>('DATABASE_URL'), config),
+    ProxyrmqModule,
   ],
   controllers: [],
   providers: [],
