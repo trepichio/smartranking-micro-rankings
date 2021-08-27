@@ -1,6 +1,13 @@
 import { Controller, Logger, PayloadTooLargeException } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import {
+  Ctx,
+  EventPattern,
+  MessagePattern,
+  Payload,
+  RmqContext,
+} from '@nestjs/microservices';
 import { IMatch } from './interfaces/match.interface';
+import { IRankingResponse } from './interfaces/ranking-response.interface';
 import { RankingsService } from './rankings.service';
 
 const ackErrors: string[] = ['E1100', '_E404'];
@@ -29,6 +36,29 @@ export class RankingsController {
       if (ackErrors.some((errorCode) => error.message.includes(errorCode))) {
         await channel.ack(originalMessage);
       }
+    }
+  }
+
+  @MessagePattern('get-rankings')
+  async getRankings(
+    @Payload() data: any,
+    @Ctx() context: RmqContext,
+  ): Promise<IRankingResponse[] | IRankingResponse> {
+    const channel = context.getChannelRef();
+    const originalMessage = context.getMessage();
+
+    try {
+      this.logger.log(`get Ranking with data:${JSON.stringify(data, null, 2)}`);
+      const { categoryId, dateRef } = data;
+
+      const rankingResponse = await this.rankingService.getRankings(
+        categoryId,
+        dateRef,
+      );
+
+      return rankingResponse;
+    } finally {
+      await channel.ack(originalMessage);
     }
   }
 }

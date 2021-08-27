@@ -7,6 +7,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ClientProxySmartRanking } from 'src/proxyrmq/client-proxy.provider';
 import { ICategory } from './interfaces/category.interface';
 import { EventName } from 'src/rankings/event-name.enum';
+import { IRankingResponse } from './interfaces/ranking-response.interface';
 import { HelperFunctions } from 'src/common/helpers';
 
 @Injectable()
@@ -65,6 +66,82 @@ export class RankingsService {
           ranking.save();
         }),
       );
+    } catch (error) {
+      this.logger.error(`error: ${error}`);
+      throw new RpcException(error.message);
+    }
+  }
+
+  async getRankings(
+    categoryId: string,
+    dateRef: string,
+  ): Promise<IRankingResponse[] | IRankingResponse> {
+    this.logger.log(
+      `Getting rankings for ${categoryId} and dateRef: ${dateRef}`,
+    );
+
+    try {
+      /**
+       * If not provided it should be the current date
+       */
+      if (!dateRef) {
+        dateRef = new Date().toLocaleString('en-US', {
+          timeZone: 'America/Sao_Paulo',
+          dateStyle: 'short',
+        });
+        this.logger.log(`dateRef: ${dateRef}`);
+      }
+
+      /**
+       * Get proccesed matches filtred by category
+       */
+      const rankings: Ranking[] = await this.rankingModel
+        .find({
+          category: categoryId,
+          dateTimeChallenge: { $lte: new Date(`${dateRef} 23:59:59.999`) },
+        })
+        .exec();
+
+      const responses = rankings.reduce((rankings, ranking) => {
+        /**
+         * Group the rankings by player
+         * and summarize the score and events (matches history)
+         */
+        if (!rankings[ranking.player]) {
+          rankings[ranking.player] = {} as IRankingResponse;
+          rankings[ranking.player].player = ranking.player;
+          rankings[ranking.player].score = 0;
+          rankings[ranking.player].matchesHistory = {
+            wins: 0,
+            losses: 0,
+            matches: 0,
+          };
+        }
+
+        rankings[ranking.player].score += parseInt(
+          `${ranking.operation}${ranking.score}`,
+        );
+        rankings[ranking.player].matchesHistory.wins +=
+          ranking.event === EventName.VICTORY ? 1 : 0;
+        rankings[ranking.player].matchesHistory.losses +=
+          ranking.event === EventName.DEFEAT ? 1 : 0;
+        rankings[ranking.player].matchesHistory.matches += 1;
+
+        return rankings;
+      }, {});
+
+      const rankingsResponses: IRankingResponse[] = Object.values(responses);
+
+      /**
+       * Sort the player's rankings by score
+       * and add the rank for each player
+       */
+      return rankingsResponses
+        .sort((a, b) => b.score - a.score)
+        .map((response) => ({
+          ...response,
+          rank: rankingsResponses.indexOf(response) + 1,
+        }));
     } catch (error) {
       this.logger.error(`error: ${error}`);
       throw new RpcException(error.message);
