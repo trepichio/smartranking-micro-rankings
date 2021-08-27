@@ -14,7 +14,7 @@ export class RankingsService {
 
   constructor(
     private readonly clientSmartRanking: ClientProxySmartRanking,
-    @InjectModel('Ranking') private readonly challengeModel: Model<Ranking>,
+    @InjectModel('Ranking') private readonly rankingModel: Model<Ranking>,
   ) {}
 
   private readonly clientAdminBackend: ClientProxy =
@@ -31,7 +31,7 @@ export class RankingsService {
 
       await Promise.all(
         match.players.map((player) => {
-          const ranking: Ranking = new this.challengeModel();
+          const ranking: Ranking = new this.rankingModel();
 
           ranking.category = match.category;
           ranking.challenge = match.challenge;
