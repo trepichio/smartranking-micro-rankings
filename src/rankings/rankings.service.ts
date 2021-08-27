@@ -7,6 +7,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ClientProxySmartRanking } from 'src/proxyrmq/client-proxy.provider';
 import { ICategory } from './interfaces/category.interface';
 import { EventName } from 'src/rankings/event-name.enum';
+import { HelperFunctions } from 'src/common/helpers';
 
 @Injectable()
 export class RankingsService {
@@ -15,6 +16,7 @@ export class RankingsService {
   constructor(
     private readonly clientSmartRanking: ClientProxySmartRanking,
     @InjectModel('Ranking') private readonly rankingModel: Model<Ranking>,
+    private readonly helper: HelperFunctions,
   ) {}
 
   private readonly clientAdminBackend: ClientProxy =
@@ -37,6 +39,13 @@ export class RankingsService {
           ranking.challenge = match.challenge;
           ranking.match = matchId;
           ranking.player = player;
+
+          /**
+           * set the date of the match
+           */
+          ranking.dateTimeChallenge = this.helper.convertLocaleStringToDate(
+            match.dateTimeChallenge,
+          );
 
           const event =
             player === match.winner

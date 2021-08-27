@@ -4,6 +4,7 @@ export interface IMatch {
   players: Array<string>;
   category: string;
   challenge: string;
+  dateTimeChallenge: string;
 }
 
 export interface IResult {

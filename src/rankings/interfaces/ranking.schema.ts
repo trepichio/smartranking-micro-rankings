@@ -23,6 +23,9 @@ export class Ranking extends mongoose.Document {
 
   @Prop()
   score: number;
+
+  @Prop()
+  dateTimeChallenge: Date;
 }
 
 export const RankingSchema = SchemaFactory.createForClass(Ranking);
