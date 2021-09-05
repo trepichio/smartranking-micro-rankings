@@ -1,0 +1,47 @@
+#### ENVIRONMENT VARIABLES ####
+@hostname = localhost
+@port = 8080
+@host = {{hostname}}:{{port}}/
+@api = api/v1/
+@contentType = application/json
+@createdAt = {{$datetime iso8601}}
+@modifiedBy = {{$processEnv USERNAME}}
+
+
+## Authentication
+@pathAuth = {{api}}auth/
+@email = usuario@gmail.com
+@password = Abc123456
+### Login
+# @name login
+POST http://{{host}}{{pathAuth}}login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### SAVE TOKEN TO ENVIRONMENT VARIABLE
+
+@authToken = {{login.response.body.$.idToken.jwtToken}}
+
+
+### Signup
+POST http://{{host}}{{pathAuth}}signup HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "name": "João",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "mobilePhone": "+5512997123456"
+}
+
+## Rankings
+### Get all rankings
+@pathRankings = {{api}}rankings/
+@catId = 60d631addd5122136a7c49ab
+@dateRef = 2023-09-02
+GET http://{{host}}{{pathRankings}}?categoryId={{catId}}&dateRef={{dateRef}} HTTP/1.1
+Authorization:Bearer {{authToken}}
